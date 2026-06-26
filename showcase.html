@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="TriJudge Showcase">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="manifest.json">
+<title>TriJudge — Showcase Judge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ════════════ TOKENS ════════════ */
+:root {
+  --bk:#0a0a0a; --wh:#f0ede6; --red:#ff2d2d; --gold:#ffd000;
+  --gr:#141414; --mid:#1e1e1e; --card:#1a1a1a; --faint:#2a2a2a; --brd:#333;
+  --bc:#00c9ff; --mc:#ff6b35; --sc:#a259ff;
+  --t:env(safe-area-inset-top,0px); --b:env(safe-area-inset-bottom,0px);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bk);color:var(--wh);font-family:'Space Mono','Courier New',monospace;min-height:100vh;overflow-x:hidden;padding-top:var(--t)}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4}
+
+/* ════════════ HEADER ════════════ */
+.app-header{padding:14px 20px 12px;border-bottom:1px solid var(--faint);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(10,10,10,.96);backdrop-filter:blur(8px);z-index:200}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:1.75rem;letter-spacing:.14em;line-height:1}
+.logo span{color:var(--gold)}
+.logo-mode{font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.2em;color:#444;text-transform:uppercase;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:10px}
+.save-pill{font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.14em;text-transform:uppercase;color:#2a2a2a;padding:3px 8px;border:1px solid #1e1e1e;transition:all .4s}
+.save-pill.saving{color:#555;border-color:#333}
+.save-pill.saved{color:#2d5a2d;border-color:#1e4a1e}
+.home-link{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.1em;color:#444;text-decoration:none;border:1px solid #222;padding:5px 10px;transition:all .2s}
+.home-link:hover{color:#888;border-color:#444}
+
+/* ════════════ PLUS MENU ════════════ */
+.plus-wrap{position:relative}
+.plus-btn{background:none;border:1px solid var(--brd);color:#666;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;touch-action:manipulation}
+.plus-btn:hover{border-color:#666;color:var(--wh)}
+.plus-menu{display:none;position:absolute;right:0;top:38px;background:#111;border:1px solid var(--brd);min-width:170px;z-index:300}
+.plus-menu.open{display:block}
+.plus-item{display:block;width:100%;background:none;border:none;border-bottom:1px solid var(--faint);color:#999;font-family:'Space Mono',monospace;font-size:.7rem;letter-spacing:.08em;padding:11px 14px;text-align:left;cursor:pointer;touch-action:manipulation;white-space:nowrap;transition:all .15s}
+.plus-item:last-child{border-bottom:none}
+.plus-item:hover{color:var(--wh);background:var(--mid)}
+
+/* ════════════ PANEL ════════════ */
+.panel-wrap{padding:24px 18px;max-width:960px;margin:0 auto}
+.sec-label{font-size:.72rem;letter-spacing:.3em;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:2.4rem;letter-spacing:.05em;margin-bottom:24px;line-height:1}
+
+/* ════════════ PARTICIPANT SEQUENCE ════════════ */
+.seq-block{background:var(--card);border:1px solid var(--brd);padding:14px 16px;margin-bottom:20px}
+.seq-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;cursor:pointer;user-select:none}
+.seq-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.18em;color:#888}
+.seq-toggle{font-size:.6rem;color:#444;transition:transform .2s}
+.seq-toggle.open{transform:rotate(90deg)}
+.seq-body{display:none}
+.seq-body.open{display:block}
+.seq-textarea{width:100%;background:#0f0f0f;border:1px solid var(--brd);color:var(--wh);font-family:'Space Mono',monospace;font-size:.75rem;padding:10px 12px;resize:vertical;min-height:70px;outline:none;line-height:1.7;margin-bottom:8px}
+.seq-textarea::placeholder{color:#333}
+.seq-textarea:focus{border-color:var(--gold)}
+.seq-parse-btn{background:var(--gold);border:none;color:var(--bk);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.15em;padding:8px 16px;cursor:pointer;touch-action:manipulation;font-weight:700}
+.seq-parse-btn:hover{background:#e6bb00}
+.seq-chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.seq-chip{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.06em;padding:3px 8px;background:#111;border:1px solid #333;color:#888;cursor:pointer;transition:all .15s}
+.seq-chip:hover{border-color:#555;color:#bbb}
+.seq-chip.current{border-color:var(--gold);color:var(--gold)}
+.seq-info{font-size:.6rem;color:#444;letter-spacing:.1em;margin-top:6px}
+.seq-nav{display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.seq-nav-btn{background:none;border:1px solid var(--brd);color:#555;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.08em;padding:6px 12px;cursor:pointer;transition:all .2s;touch-action:manipulation}
+.seq-nav-btn:hover{border-color:var(--gold);color:var(--gold)}
+.seq-pos-label{font-size:.62rem;color:#444;letter-spacing:.1em;flex:1}
+
+/* ════════════ SHOWCASE TYPE ════════════ */
+.showcase-step{margin-bottom:24px}
+.step-header{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.step-num{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.25em;color:var(--gold);border:1px solid var(--gold);width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-title{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.2em;color:#888}
+.showcase-type-row{display:flex;gap:10px;flex-wrap:wrap}
+.stype-btn{background:var(--card);border:2px solid var(--brd);color:#555;font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.15em;padding:14px 20px;cursor:pointer;transition:all .2s;touch-action:manipulation;flex:1;min-width:140px;text-align:center}
+.stype-btn.active{border-color:var(--gold);color:var(--gold);background:#1a1500}
+.stype-btn:hover:not(.active){border-color:#555;color:#999}
+
+/* ════════════ ACTIONS BAR ════════════ */
+.showcase-actions-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.sec-btn{background:none;border:1px solid var(--brd);color:#555;font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.1em;padding:9px 14px;cursor:pointer;transition:all .2s;touch-action:manipulation}
+.sec-btn:hover{border-color:#666;color:#999}
+.sec-btn.active-tab{border-color:var(--gold);color:var(--gold)}
+
+/* ════════════ SCORING ════════════ */
+.criteria-list{margin-bottom:16px}
+.crit-scoring-row{display:flex;align-items:flex-start;padding:14px 16px;background:var(--card);border:1px solid var(--brd);margin-bottom:8px;gap:12px;flex-wrap:wrap;transition:border-color .2s}
+.crit-scoring-row:hover{border-color:#444}
+.crit-info-col{display:flex;flex-direction:column;gap:2px;min-width:130px;padding-top:2px}
+.crit-label{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;color:var(--wh)}
+.crit-weight-badge{font-size:.62rem;color:var(--gold);letter-spacing:.1em;background:#1a1500;border:1px solid #3a3000;padding:2px 6px;white-space:nowrap;width:fit-content}
+.sc-score-input-wrap{display:flex;flex-direction:column;gap:6px;min-width:200px;flex:1}
+.sc-slider-row{display:flex;align-items:center;gap:8px}
+.sc-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;background:var(--faint);border-radius:0;outline:none;cursor:pointer;flex:1}
+.sc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;background:var(--gold);cursor:pointer;border:none;border-radius:0}
+.sc-slider::-moz-range-thumb{width:18px;height:18px;background:var(--gold);cursor:pointer;border:none;border-radius:0}
+.sc-num-inp{background:var(--card);border:1px solid var(--brd);color:var(--gold);font-family:'Bebas Neue',sans-serif;font-size:1.4rem;width:62px;padding:4px 8px;outline:none;text-align:center;transition:border-color .2s;flex-shrink:0}
+.sc-num-inp:focus{border-color:var(--gold)}
+.sc-max-label{font-size:.65rem;color:#444;letter-spacing:.1em;white-space:nowrap;align-self:flex-end;margin-bottom:2px}
+
+/* Input mode toggle */
+.sc-input-toggle{display:flex;gap:0;margin-bottom:10px;border:1px solid var(--brd);width:fit-content}
+.sc-input-mode-btn{background:none;border:none;border-right:1px solid var(--brd);color:#555;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:7px 12px;cursor:pointer;transition:all .15s;touch-action:manipulation}
+.sc-input-mode-btn:last-child{border-right:none}
+.sc-input-mode-btn.active{background:var(--mid);color:var(--wh)}
+
+/* Total box */
+.showcase-total-box{background:var(--mid);border:2px solid var(--gold);padding:16px 20px;margin:16px 0;display:flex;align-items:center;justify-content:space-between}
+.sc-total-label{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.2em;color:#555}
+.sc-total-score{font-family:'Bebas Neue',sans-serif;font-size:3rem;letter-spacing:.05em;color:var(--gold);line-height:1}
+.sc-total-max{font-size:.7rem;color:#555;align-self:flex-end;margin-bottom:4px;margin-left:3px}
+
+/* ════════════ FORMS ════════════ */
+.col-name-inp{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:1.1rem;letter-spacing:.1em;padding:9px 13px;outline:none;transition:border-color .2s}
+.col-name-inp:focus{border-color:var(--gold)}
+.col-name-inp::placeholder{color:#2e2e2e}
+.notes-area{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Space Mono',monospace;font-size:.82rem;width:100%;padding:12px 14px;resize:vertical;min-height:60px;outline:none;margin-bottom:16px;line-height:1.6}
+.notes-area::placeholder{color:#333}
+.notes-area:focus{border-color:#555}
+.submit-btn{background:var(--gold);color:var(--bk);border:none;font-family:'Bebas Neue',sans-serif;font-size:1.25rem;letter-spacing:.2em;padding:15px 32px;cursor:pointer;transition:all .15s;width:100%;touch-action:manipulation;font-weight:700}
+.submit-btn:hover{background:#e6bb00}
+.submit-btn:active{transform:scale(.99)}
+.reset-btn{background:none;border:1px solid var(--brd);color:#555;font-family:'Space Mono',monospace;font-size:.75rem;letter-spacing:.1em;padding:9px 14px;cursor:pointer;transition:all .2s;margin-top:8px;touch-action:manipulation}
+.reset-btn:hover{border-color:var(--gold);color:var(--gold)}
+.reset-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.hedit-label{font-size:.62rem;color:#555;letter-spacing:.15em;text-transform:uppercase;display:block;margin-bottom:3px}
+
+/* ════════════ HISTORY ════════════ */
+.history-block{border-top:1px solid var(--faint);padding-top:22px;margin-top:22px}
+.history-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.htitle{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.2em;color:#555}
+.sort-controls{display:flex;gap:4px}
+.sort-btn{background:none;border:1px solid var(--brd);color:#555;font-family:'Space Mono',monospace;font-size:.65rem;letter-spacing:.1em;padding:5px 10px;cursor:pointer;transition:all .2s;touch-action:manipulation}
+.sort-btn.active-sort{border-color:var(--gold);color:var(--gold)}
+.hitem{display:flex;align-items:center;gap:10px;padding:10px 13px;background:var(--card);border:1px solid var(--brd);margin-bottom:5px;flex-wrap:wrap;cursor:pointer;transition:border-color .2s}
+.hitem:hover{border-color:#444}
+.hnum{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.1em;color:#555;min-width:26px}
+.hverdict{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.08em;color:var(--gold)}
+.hnotes{font-size:.7rem;color:#444;padding:5px 13px;background:var(--card);border:1px solid var(--brd);border-top:none;margin-bottom:6px;line-height:1.6}
+.hedit-row{display:none;padding:8px 13px;background:#111;border:1px solid var(--brd);border-top:none;margin-bottom:6px;gap:8px;flex-wrap:wrap}
+.hedit-row.open{display:flex}
+.hedit-inp{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;padding:6px 10px;outline:none;transition:border-color .2s;flex:1;min-width:120px}
+.hedit-inp:focus{border-color:var(--gold)}
+.hedit-score-inp{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:1rem;width:62px;padding:6px 8px;outline:none;text-align:center;transition:border-color .2s}
+.hedit-score-inp:focus{border-color:var(--gold)}
+
+/* ════════════ MODALS ════════════ */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:flex-end;justify-content:center;padding-bottom:var(--b)}
+.modal-overlay.open{display:flex}
+.modal-box{background:#111;border:1px solid var(--brd);border-bottom:none;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:24px;animation:slideUp .25s ease;position:relative}
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.1em;margin-bottom:6px}
+.modal-sub{font-size:.68rem;color:#555;letter-spacing:.15em;text-transform:uppercase;margin-bottom:18px}
+.modal-close{position:absolute;top:20px;right:20px;background:none;border:none;color:#555;font-size:1.2rem;cursor:pointer;touch-action:manipulation}
+
+/* Criteria modal */
+.crit-toggle-list{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.crit-toggle-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--card);border:1px solid var(--brd);cursor:pointer;transition:all .2s;touch-action:manipulation}
+.crit-toggle-item.active{border-color:#555;background:var(--mid)}
+.crit-toggle-item.active .cti-check{color:var(--gold)}
+.cti-name{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em}
+.cti-check{color:#333;font-size:1rem;transition:color .2s}
+.add-crit-row{display:flex;gap:8px;margin-top:8px}
+.add-crit-inp{flex:1;background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;padding:9px 12px;outline:none;transition:border-color .2s}
+.add-crit-inp:focus{border-color:var(--gold)}
+.add-crit-inp::placeholder{color:#2e2e2e}
+.add-crit-btn{background:var(--gold);border:none;color:var(--bk);font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.15em;padding:9px 18px;cursor:pointer;touch-action:manipulation;white-space:nowrap;font-weight:700}
+
+/* Weightage modal */
+.weight-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.weight-name{font-family:'Bebas Neue',sans-serif;font-size:.95rem;letter-spacing:.1em;flex:1;min-width:100px}
+.weight-inp{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:1.2rem;width:70px;padding:7px 10px;outline:none;text-align:center;transition:border-color .2s}
+.weight-inp:focus{border-color:var(--gold)}
+.weight-pct{font-size:.82rem;color:#555}
+.weight-total-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--faint);margin-top:8px}
+.weight-total-lbl{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.2em;color:#555}
+.weight-total-val{font-family:'Bebas Neue',sans-serif;font-size:1.4rem;letter-spacing:.05em}
+.weight-err{font-size:.68rem;color:var(--red);letter-spacing:.1em;margin-top:6px;display:none}
+.weight-ok{font-size:.68rem;color:#2d7a2d;letter-spacing:.1em;margin-top:6px;display:none}
+
+/* Tutorial */
+.tut-step{padding:14px 0;border-bottom:1px solid var(--faint)}
+.tut-step:last-child{border-bottom:none}
+.tut-num{font-family:'Bebas Neue',sans-serif;font-size:.88rem;letter-spacing:.2em;color:var(--gold);margin-bottom:4px}
+.tut-text{font-size:.75rem;color:#888;letter-spacing:.04em;line-height:1.8}
+
+/* Feedback */
+.feedback-inp{background:var(--card);border:1px solid var(--brd);color:var(--wh);font-family:'Space Mono',monospace;font-size:.78rem;width:100%;padding:12px 14px;resize:vertical;min-height:100px;outline:none;line-height:1.6;margin-bottom:12px}
+.feedback-inp::placeholder{color:#333}
+.feedback-inp:focus{border-color:#555}
+
+/* Share */
+.share-entry{background:var(--card);border:1px solid var(--brd);padding:10px 13px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.share-id{font-family:'Bebas Neue',sans-serif;font-size:1rem;letter-spacing:.1em;color:var(--gold)}
+.share-name{font-family:'Bebas Neue',sans-serif;font-size:.9rem;letter-spacing:.08em;color:var(--wh)}
+.share-score{font-family:'Bebas Neue',sans-serif;font-size:1.6rem;letter-spacing:.05em;color:var(--gold)}
+.share-detail{font-size:.68rem;color:#555;letter-spacing:.07em;width:100%}
+
+/* Install bar */
+.install-bar{display:none;background:#0f1a0f;border:1px solid #1e4a1e;padding:12px 18px;margin:12px 18px 0;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.install-bar.show{display:flex}
+.install-bar p{font-size:.75rem;color:#5a9b5a;letter-spacing:.08em;line-height:1.6}
+.install-btn{background:#2d5a2d;border:none;color:var(--wh);font-family:'Bebas Neue',sans-serif;font-size:.85rem;letter-spacing:.15em;padding:7px 16px;cursor:pointer;flex-shrink:0;touch-action:manipulation}
+.install-dismiss{background:none;border:none;color:#3a5a3a;font-size:.85rem;cursor:pointer;padding:4px}
+.install-dont-show{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:.62rem;color:#3a5a3a;letter-spacing:.1em;cursor:pointer;user-select:none;width:100%}
+.install-dont-show input{cursor:pointer}
+
+/* ════════════ RESPONSIVE ════════════ */
+@media(max-width:600px){
+  .panel-wrap{padding:18px 14px}
+  .sec-title{font-size:1.9rem}
+  .modal-box{padding:18px}
+  .showcase-type-row{flex-direction:column}
+  .stype-btn{min-width:unset}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════ HEADER ════════════ -->
+<header class="app-header">
+  <div>
+    <div class="logo">TRI<span>JUDGE</span></div>
+    <div class="logo-mode">✦ Showcase Mode</div>
+  </div>
+  <div class="header-right">
+    <a href="index.html" class="home-link">← Home</a>
+    <div class="save-pill" id="save-pill">● AUTO</div>
+    <div class="plus-wrap">
+      <button class="plus-btn" id="plus-btn" onclick="togglePlusMenu()" title="More options">+</button>
+      <div class="plus-menu" id="plus-menu">
+        <button class="plus-item" onclick="openModal('modal-tutorial');closePlusMenu()">📖 Tutorial</button>
+        <button class="plus-item" onclick="openModal('modal-feedback');closePlusMenu()">✉️ Help / Feedback</button>
+        <button class="plus-item" onclick="shareResults();closePlusMenu()">📤 Share / Export</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- Install bar -->
+<div class="install-bar" id="install-bar">
+  <p>📲 Add TriJudge to your Home Screen for offline access.</p>
+  <div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="install-btn" id="install-btn">Install App</button>
+      <button class="install-dismiss" onclick="dismissInstall()">✕</button>
+    </div>
+    <label class="install-dont-show">
+      <input type="checkbox" id="dont-show-again" onchange="if(this.checked){localStorage.setItem('tj_install_dismissed','1')}">
+      Don't show again
+    </label>
+  </div>
+</div>
+
+<!-- ════════════ MAIN PANEL ════════════ -->
+<div class="panel-wrap">
+  <div class="sec-label">// Open / Kpop Cover Scoring</div>
+  <div class="sec-title">Showcase Judge</div>
+
+  <!-- Participant Sequence -->
+  <div class="seq-block">
+    <div class="seq-header" onclick="toggleSeqBlock()">
+      <span class="seq-title">👥 PARTICIPANT SEQUENCE</span>
+      <span class="seq-toggle" id="seq-toggle">▶</span>
+    </div>
+    <div class="seq-body" id="seq-body">
+      <div style="font-size:.62rem;color:#444;letter-spacing:.1em;margin-bottom:6px">Paste your lineup — one name per line, comma-separated, or numbered list. Auto-detected.</div>
+      <textarea class="seq-textarea" id="seq-inp" placeholder="e.g.&#10;1. Team Alpha&#10;2. Team Beta&#10;3. Kpop Crew&#10;&#10;or: Team Alpha, Team Beta, Kpop Crew"></textarea>
+      <button class="seq-parse-btn" onclick="parseSequence()">↳ Load Sequence</button>
+      <div class="seq-chips" id="seq-chips"></div>
+      <div class="seq-info" id="seq-info"></div>
+    </div>
+  </div>
+
+  <!-- Nav when sequence active -->
+  <div id="seq-nav" style="display:none" class="seq-nav">
+    <button class="seq-nav-btn" onclick="seqNav(-1)">← Prev</button>
+    <span class="seq-pos-label" id="seq-pos"></span>
+    <button class="seq-nav-btn" onclick="seqNav(1)">Next →</button>
+    <button class="seq-nav-btn" onclick="clearSequence()" style="margin-left:auto;color:#444">✕ Clear</button>
+  </div>
+
+  <!-- Step 1: Type -->
+  <div class="showcase-step">
+    <div class="step-header"><div class="step-num">1</div><div class="step-title">Showcase Type</div></div>
+    <div class="showcase-type-row">
+      <button class="stype-btn active" id="stype-open" onclick="setShowcaseType('open',this)">Open Showcase</button>
+      <button class="stype-btn" id="stype-kpop" onclick="setShowcaseType('kpop',this)">Kpop Cover</button>
+    </div>
+  </div>
+
+  <!-- Step 2: Criteria & Weightage -->
+  <div class="showcase-step">
+    <div class="step-header"><div class="step-num">2</div><div class="step-title">Criteria & Weightage</div></div>
+    <div class="showcase-actions-bar">
+      <button class="sec-btn" onclick="openModal('modal-criteria')">✏️ Edit Criteria</button>
+      <button class="sec-btn" onclick="openModal('modal-weightage')">⚖️ Set Weightage</button>
+    </div>
+    <!-- Live weightage summary -->
+    <div id="weight-summary" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px"></div>
+  </div>
+
+  <!-- Step 3: Score Entry -->
+  <div class="showcase-step">
+    <div class="step-header"><div class="step-num">3</div><div class="step-title">Score Entry</div></div>
+
+    <div style="margin-bottom:14px">
+      <div class="hedit-label">Group / Team Name</div>
+      <input class="col-name-inp" type="text" id="sc-group-name" placeholder="GROUP NAME" maxlength="40" style="max-width:320px;display:block" oninput="triggerSave()">
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div class="hedit-label" style="margin-bottom:5px">Scoring Input Mode</div>
+      <div class="sc-input-toggle">
+        <button class="sc-input-mode-btn active" id="sc-mode-slider" onclick="setScInputMode('slider',this)">⇔ Slider</button>
+        <button class="sc-input-mode-btn" id="sc-mode-direct" onclick="setScInputMode('direct',this)">✎ Direct Key-in</button>
+      </div>
+    </div>
+
+    <div class="criteria-list" id="showcase-criteria-scoring"></div>
+
+    <div class="showcase-total-box">
+      <div>
+        <div class="sc-total-label">Weighted Score</div>
+        <div style="font-size:.44rem;color:#444;letter-spacing:.1em;margin-top:3px">out of 100</div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:4px">
+        <div class="sc-total-score" id="sc-final-score">—</div>
+        <div class="sc-total-max">/ 100</div>
+      </div>
+    </div>
+
+    <textarea class="notes-area" id="sc-notes" placeholder="Comments / observations..."></textarea>
+    <button class="submit-btn" onclick="submitShowcase()">⬛ Lock Score</button>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="reset-btn" onclick="clearShowcaseInputs()" style="flex:1;text-align:center">Reset Inputs</button>
+      <button class="reset-btn danger" onclick="clearShowcaseHistory()" style="flex:1;text-align:center">Clear History</button>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-block" id="sc-log" style="display:none">
+    <div class="history-header">
+      <div class="htitle">// Submitted Scores</div>
+      <div class="sort-controls">
+        <button class="sort-btn active-sort" id="sc-sort-new" onclick="setScSortOrder('newest',this)">Newest</button>
+        <button class="sort-btn" id="sc-sort-high" onclick="setScSortOrder('highest',this)">High ↓</button>
+        <button class="sort-btn" id="sc-sort-low" onclick="setScSortOrder('lowest',this)">Low ↑</button>
+      </div>
+    </div>
+    <div id="sc-log-items"></div>
+  </div>
+</div>
+
+<!-- ════════════ MODALS ════════════ -->
+
+<!-- Tutorial -->
+<div class="modal-overlay" id="modal-tutorial" onclick="if(event.target===this)closeModal('modal-tutorial')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-tutorial')">✕</button>
+    <div class="modal-title">Showcase Judge — How to Use</div>
+    <div class="modal-sub">Quick Guide</div>
+    <div class="tut-step"><div class="tut-num">PARTICIPANT SEQUENCE</div><div class="tut-text">Paste your group lineup (numbered, comma-separated, or plain lines). After loading, navigate with Prev / Next — the group name auto-fills as you move through. Click any chip to jump directly. After locking a score it auto-advances to the next entry.</div></div>
+    <div class="tut-step"><div class="tut-num">SHOWCASE TYPE</div><div class="tut-text">Choose Open Showcase or Kpop Cover. Each type loads different default criteria. You can edit these any time.</div></div>
+    <div class="tut-step"><div class="tut-num">CRITERIA & WEIGHTAGE</div><div class="tut-text">Edit Criteria — toggle items on/off or add custom ones. Set Weightage — assign a % to each criterion (must total 100%). Use Distribute Evenly for a quick equal split. The live summary always shows your current weights.</div></div>
+    <div class="tut-step"><div class="tut-num">SCORING</div><div class="tut-text">Use Slider mode to drag, or Direct Key-in to type. Each criterion's max score equals its weight %. The weighted total out of 100 calculates automatically. Lock Score to save. Tap any saved entry to expand and edit individual criterion scores or the group name.</div></div>
+    <div class="tut-step"><div class="tut-num">EXPORT</div><div class="tut-text">Tap + → Share / Export to copy results as text or download as CSV.</div></div>
+    <button class="submit-btn" onclick="closeModal('modal-tutorial')" style="margin-top:16px">Got It</button>
+  </div>
+</div>
+
+<!-- Feedback -->
+<div class="modal-overlay" id="modal-feedback" onclick="if(event.target===this)closeModal('modal-feedback')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-feedback')">✕</button>
+    <div class="modal-title">Help / Feedback</div>
+    <div class="modal-sub">Send a message to the TriJudge team</div>
+    <div class="hedit-label">Your message</div>
+    <textarea class="feedback-inp" id="feedback-text" placeholder="Describe your issue, feedback or feature request..."></textarea>
+    <button class="submit-btn" onclick="sendFeedback()">Send Feedback</button>
+  </div>
+</div>
+
+<!-- Criteria -->
+<div class="modal-overlay" id="modal-criteria" onclick="if(event.target===this)closeModal('modal-criteria')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-criteria')">✕</button>
+    <div class="modal-title">Edit Criteria</div>
+    <div class="modal-sub" id="criteria-modal-sub">Toggle criteria on/off or add custom ones</div>
+    <div class="crit-toggle-list" id="criteria-toggle-list"></div>
+    <div class="add-crit-row">
+      <input class="add-crit-inp" type="text" id="new-crit-inp" placeholder="ADD CUSTOM CRITERION" maxlength="32"
+        onkeydown="if(event.key==='Enter')addCustomCriterion()">
+      <button class="add-crit-btn" onclick="addCustomCriterion()">+ Add</button>
+    </div>
+    <button class="submit-btn" onclick="saveCriteriaAndClose()" style="margin-top:14px">Confirm Criteria</button>
+  </div>
+</div>
+
+<!-- Weightage -->
+<div class="modal-overlay" id="modal-weightage" onclick="if(event.target===this)closeModal('modal-weightage')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-weightage')">✕</button>
+    <div class="modal-title">Set Weightage</div>
+    <div class="modal-sub">Assign % to each criterion. Must total 100%.</div>
+    <div id="weightage-rows"></div>
+    <div class="weight-total-row">
+      <div class="weight-total-lbl">Total</div>
+      <div class="weight-total-val" id="weight-total-val">0%</div>
+    </div>
+    <div class="weight-err" id="weight-err">⚠ Total must equal 100%</div>
+    <div class="weight-ok" id="weight-ok">✓ Valid — weights set</div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="sec-btn" onclick="distributeWeightsEvenly()" style="flex:1;text-align:center">Distribute Evenly</button>
+      <button class="submit-btn" onclick="saveWeightageAndClose()" style="flex:2">Save Weightage</button>
+    </div>
+  </div>
+</div>
+
+<!-- Share / Export -->
+<div class="modal-overlay" id="modal-share" onclick="if(event.target===this)closeModal('modal-share')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('modal-share')">✕</button>
+    <div class="modal-title">Share / Export Results</div>
+    <div class="modal-sub">✦ Showcase Results</div>
+    <div id="share-content"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">
+      <button class="sec-btn" onclick="copyResultsText()" style="flex:1;text-align:center">📋 Copy Text</button>
+      <button class="sec-btn" onclick="exportCSV()" style="flex:1;text-align:center">📊 Export CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════
+//  CONSTANTS
+// ════════════════════════════════════════════════════
+const LS_KEY = 'trijudge_showcase_v1';
+
+const SHOWCASE_OPEN_DEFAULTS = ['Creativity','Technique','Costume','Overall Performance','Synchronisation','Teamwork','Originality','Showmanship'];
+const SHOWCASE_KPOP_DEFAULTS = ['Creativity','Technique','Dance Cover Accuracy','Kpop Identity','Costume','Overall Performance'];
+
+// ════════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════════
+let showcaseType = 'open';
+let scCriteria   = [...SHOWCASE_OPEN_DEFAULTS];
+let scActive     = new Set(SHOWCASE_OPEN_DEFAULTS);
+let scCustomCriteria = [];
+let scWeights    = {};
+let scScores     = {};
+let scLog        = [];
+let scIdCounter  = 1;
+let scSortOrder  = 'newest';
+let scInputMode  = 'slider';
+
+// Participant sequence
+let scSequence   = [];
+let scCursor     = 0;
+
+let saveTimer = null;
+
+// ════════════════════════════════════════════════════
+//  PLUS MENU
+// ════════════════════════════════════════════════════
+function togglePlusMenu() { document.getElementById('plus-menu').classList.toggle('open'); }
+function closePlusMenu()  { document.getElementById('plus-menu').classList.remove('open'); }
+document.addEventListener('click', e => { if (!e.target.closest('.plus-wrap')) closePlusMenu(); });
+
+// ════════════════════════════════════════════════════
+//  PARTICIPANT SEQUENCE
+// ════════════════════════════════════════════════════
+function toggleSeqBlock() {
+  const body = document.getElementById('seq-body');
+  const tog  = document.getElementById('seq-toggle');
+  body.classList.toggle('open');
+  tog.classList.toggle('open');
+}
+
+function parseNames(raw) {
+  if (!raw.trim()) return [];
+  const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  if (lines.length === 1 && lines[0].includes(',')) {
+    return lines[0].split(',').map(s => s.trim()).filter(Boolean);
+  }
+  return lines.map(l =>
+    l.replace(/^[\s]*[\d]+[\.\)]\s*/, '').replace(/^[-•#]\s*/, '').trim()
+  ).filter(Boolean);
+}
+
+function parseSequence() {
+  const raw = document.getElementById('seq-inp').value;
+  scSequence = parseNames(raw);
+  scCursor = 0;
+  renderSeqChips();
+  if (scSequence.length) {
+    applySeqToForm();
+    document.getElementById('seq-body').classList.add('open');
+    document.getElementById('seq-toggle').classList.add('open');
+  }
+  triggerSave();
+}
+
+function renderSeqChips() {
+  const chips = document.getElementById('seq-chips');
+  const info  = document.getElementById('seq-info');
+  const nav   = document.getElementById('seq-nav');
+  const pos   = document.getElementById('seq-pos');
+  if (!scSequence.length) {
+    chips.innerHTML = '';
+    info.textContent = '';
+    nav.style.display = 'none';
+    return;
+  }
+  chips.innerHTML = scSequence.map((n, i) =>
+    `<span class="seq-chip ${i === scCursor ? 'current' : ''}" onclick="jumpSeq(${i})">${i+1}. ${n}</span>`
+  ).join('');
+  info.textContent = `${scSequence.length} participants loaded`;
+  nav.style.display  = 'flex';
+  pos.textContent    = `${scCursor + 1} / ${scSequence.length} — ${scSequence[scCursor]}`;
+}
+
+function applySeqToForm() {
+  const nameInp = document.getElementById('sc-group-name');
+  if (nameInp) nameInp.value = scSequence[scCursor] || '';
+  renderSeqChips();
+}
+
+function seqNav(dir) {
+  if (!scSequence.length) return;
+  scCursor = Math.max(0, Math.min(scSequence.length - 1, scCursor + dir));
+  clearShowcaseInputs(true);
+}
+
+function jumpSeq(idx) {
+  scCursor = idx;
+  clearShowcaseInputs(true);
+}
+
+function clearSequence() {
+  scSequence = [];
+  scCursor   = 0;
+  document.getElementById('seq-inp').value = '';
+  renderSeqChips();
+  triggerSave();
+}
+
+// ════════════════════════════════════════════════════
+//  SHOWCASE TYPE
+// ════════════════════════════════════════════════════
+function setShowcaseType(type, btn) {
+  showcaseType = type;
+  document.querySelectorAll('.stype-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (type === 'open') {
+    scCriteria = [...SHOWCASE_OPEN_DEFAULTS, ...scCustomCriteria.filter(c => !SHOWCASE_OPEN_DEFAULTS.includes(c))];
+    scActive   = new Set(SHOWCASE_OPEN_DEFAULTS);
+  } else {
+    scCriteria = [...SHOWCASE_KPOP_DEFAULTS, ...scCustomCriteria.filter(c => !SHOWCASE_KPOP_DEFAULTS.includes(c))];
+    scActive   = new Set(SHOWCASE_KPOP_DEFAULTS);
+  }
+  distributeWeightsEvenly(false);
+  initShowcaseScoring();
+  renderWeightSummary();
+  triggerSave();
+}
+
+function setScInputMode(mode, btn) {
+  scInputMode = mode;
+  document.querySelectorAll('.sc-input-mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  initShowcaseScoring();
+  triggerSave();
+}
+
+// ════════════════════════════════════════════════════
+//  SCORING
+// ════════════════════════════════════════════════════
+function slugify(s) { return s.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase(); }
+
+function initShowcaseScoring() {
+  scScores = {};
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  const el = document.getElementById('showcase-criteria-scoring');
+  if (!el) return;
+  el.innerHTML = activeCrits.map(crit => {
+    const w   = scWeights[crit] || 0;
+    const max = w || 10;
+    const slug = slugify(crit);
+    if (scInputMode === 'slider') {
+      return `
+        <div class="crit-scoring-row">
+          <div class="crit-info-col">
+            <div class="crit-label">${crit}</div>
+            <div class="crit-weight-badge">${w}% max</div>
+          </div>
+          <div class="sc-score-input-wrap">
+            <div class="sc-slider-row">
+              <input type="range" class="sc-slider" id="sc-slider-${slug}" min="0" max="${max}" step="0.5" value="0"
+                oninput="setScScoreFromSlider('${crit}', parseFloat(this.value))">
+              <input type="number" class="sc-num-inp" id="sc-num-${slug}" min="0" max="${max}" step="0.5" value=""
+                placeholder="—" oninput="setScScoreFromInput('${crit}', parseFloat(this.value) || null)">
+              <span class="sc-max-label">/ ${max}</span>
+            </div>
+          </div>
+        </div>`;
+    } else {
+      return `
+        <div class="crit-scoring-row">
+          <div class="crit-info-col">
+            <div class="crit-label">${crit}</div>
+            <div class="crit-weight-badge">${w}% max</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex:1">
+            <input type="number" class="sc-num-inp" id="sc-num-${slug}" min="0" max="${max}" step="0.5" value=""
+              placeholder="0–${max}" style="width:80px;font-size:1.8rem"
+              oninput="setScScoreFromInput('${crit}', parseFloat(this.value) || null)">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:.85rem;color:#555">/ ${max} pts</span>
+          </div>
+        </div>`;
+    }
+  }).join('');
+  calcShowcaseTotal();
+}
+
+function setScScoreFromSlider(crit, val) {
+  const slug = slugify(crit);
+  const max  = scWeights[crit] || 10;
+  val = Math.max(0, Math.min(max, val));
+  scScores[crit] = val;
+  const numEl = document.getElementById(`sc-num-${slug}`);
+  if (numEl) numEl.value = val;
+  calcShowcaseTotal();
+  triggerSave();
+}
+
+function setScScoreFromInput(crit, val) {
+  const slug = slugify(crit);
+  const max  = scWeights[crit] || 10;
+  if (val === null || isNaN(val)) {
+    scScores[crit] = null;
+    const slEl = document.getElementById(`sc-slider-${slug}`);
+    if (slEl) slEl.value = 0;
+    calcShowcaseTotal();
+    return;
+  }
+  val = Math.max(0, Math.min(max, val));
+  scScores[crit] = val;
+  const slEl = document.getElementById(`sc-slider-${slug}`);
+  if (slEl) slEl.value = val;
+  calcShowcaseTotal();
+  triggerSave();
+}
+
+function calcShowcaseTotal() {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  let total = 0;
+  activeCrits.forEach(crit => { if (scScores[crit] != null) total += scScores[crit]; });
+  const el = document.getElementById('sc-final-score');
+  if (el) el.textContent = total > 0 ? total.toFixed(1) : '—';
+}
+
+function submitShowcase() {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  for (const crit of activeCrits) {
+    if (scScores[crit] == null) { alert(`Please score all criteria. Missing: ${crit}`); return; }
+  }
+  const totalW = activeCrits.reduce((s, c) => s + (scWeights[c] || 0), 0);
+  if (Math.abs(totalW - 100) > 1) {
+    alert('Weightage does not total 100%. Please set weightage first.');
+    openModal('modal-weightage');
+    return;
+  }
+  let finalScore = 0;
+  const breakdown = {};
+  activeCrits.forEach(crit => {
+    const sc = scScores[crit];
+    const w  = scWeights[crit] || 0;
+    breakdown[crit] = { score: sc, weight: w, contribution: +sc.toFixed(2) };
+    finalScore += sc;
+  });
+  const groupName = document.getElementById('sc-group-name')?.value?.trim() || '';
+  scLog.push({
+    id: scIdCounter++,
+    type: showcaseType,
+    groupName,
+    breakdown,
+    final: +finalScore.toFixed(1),
+    notes: document.getElementById('sc-notes')?.value?.trim() || '',
+    ts: Date.now()
+  });
+  renderScLog();
+  // Auto-advance sequence
+  if (scSequence.length && scCursor < scSequence.length - 1) {
+    scCursor++;
+    clearShowcaseInputs(true);
+  } else {
+    clearShowcaseInputs(false);
+  }
+  triggerSave();
+}
+
+function clearShowcaseInputs(keepSeqName = false) {
+  const nameInp = document.getElementById('sc-group-name');
+  if (nameInp) nameInp.value = keepSeqName && scSequence.length ? (scSequence[scCursor] || '') : '';
+  if (document.getElementById('sc-notes')) document.getElementById('sc-notes').value = '';
+  scScores = {};
+  initShowcaseScoring();
+  if (keepSeqName) renderSeqChips();
+}
+
+// ════════════════════════════════════════════════════
+//  HISTORY
+// ════════════════════════════════════════════════════
+function renderScLog() {
+  const el    = document.getElementById('sc-log');
+  const items = document.getElementById('sc-log-items');
+  if (!el || !items) return;
+  if (!scLog.length) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  let list = [...scLog];
+  if (scSortOrder === 'highest') list.sort((a, b) => b.final - a.final);
+  else if (scSortOrder === 'lowest') list.sort((a, b) => a.final - b.final);
+  else list.sort((a, b) => b.ts - a.ts);
+
+  items.innerHTML = list.map(entry => {
+    const displayId  = entry.groupName ? `#${entry.id} – ${entry.groupName}` : `#${entry.id}`;
+    const detailHtml = Object.entries(entry.breakdown).map(([crit, v]) =>
+      `<span style="margin-right:8px;font-size:.48rem;color:#555">${crit}: <strong style="color:var(--wh)">${v.score}/${v.weight}</strong>pts</span>`
+    ).join('');
+    const editCritHtml = Object.entries(entry.breakdown).map(([crit, v]) => `
+      <div>
+        <div class="hedit-label">${crit} <span style="color:#333">(max ${v.weight})</span></div>
+        <input class="hedit-score-inp" type="number" value="${v.score}" min="0" max="${v.weight}" step="0.5"
+          onchange="editScCritScore(${entry.id},'${crit}',parseFloat(this.value))">
+      </div>`).join('');
+    return `
+      <div>
+        <div class="hitem" onclick="toggleScEditRow(${entry.id})">
+          <span class="hnum">#${entry.id}</span>
+          <span style="font-size:.6rem;color:#555;padding:1px 6px;border:1px solid #333;margin-right:4px">${entry.type}</span>
+          <span class="hverdict" style="flex:1">${displayId}</span>
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:1.4rem;color:var(--gold)">${entry.final}</span>
+          <span style="font-size:.55rem;color:#444;margin-left:4px">/ 100</span>
+        </div>
+        <div style="font-size:.46rem;padding:5px 13px 6px;background:var(--card);border:1px solid var(--brd);border-top:none;margin-bottom:2px;flex-wrap:wrap;display:flex">${detailHtml}</div>
+        ${entry.notes ? `<div class="hnotes">💬 ${entry.notes}</div>` : ''}
+        <div class="hedit-row" id="sc-edit-row-${entry.id}">
+          <div style="width:100%;margin-bottom:6px">
+            <div class="hedit-label">Group Name</div>
+            <input class="hedit-inp" value="${entry.groupName}" placeholder="NAME"
+              onchange="editScName(${entry.id}, this.value)" style="max-width:260px">
+          </div>
+          ${editCritHtml}
+          <div style="width:100%;display:flex;gap:6px;margin-top:6px">
+            <button class="seq-parse-btn" onclick="deleteScEntry(${entry.id})"
+              style="background:var(--red);color:var(--wh);font-size:.7rem;padding:6px 12px">✕ Delete</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleScEditRow(id) { document.getElementById(`sc-edit-row-${id}`)?.classList.toggle('open'); }
+
+function editScName(id, val) {
+  const e = scLog.find(x => x.id === id);
+  if (e) e.groupName = val;
+  renderScLog(); triggerSave();
+}
+
+function editScCritScore(id, crit, val) {
+  const e = scLog.find(x => x.id === id);
+  if (!e || !e.breakdown[crit]) return;
+  const max = e.breakdown[crit].weight;
+  val = Math.max(0, Math.min(max, isNaN(val) ? 0 : val));
+  e.breakdown[crit].score = val;
+  e.breakdown[crit].contribution = +val.toFixed(2);
+  e.final = +Object.values(e.breakdown).reduce((s, v) => s + v.score, 0).toFixed(1);
+  renderScLog(); triggerSave();
+}
+
+function deleteScEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  scLog = scLog.filter(x => x.id !== id);
+  renderScLog(); triggerSave();
+}
+
+function setScSortOrder(order, btn) {
+  scSortOrder = order;
+  document.querySelectorAll('#sc-log .sort-btn').forEach(b => b.classList.remove('active-sort'));
+  btn.classList.add('active-sort');
+  renderScLog();
+}
+
+function clearShowcaseHistory() {
+  if (!confirm('Clear all showcase scores?')) return;
+  scLog = []; scIdCounter = 1;
+  renderScLog(); triggerSave();
+}
+
+// ════════════════════════════════════════════════════
+//  CRITERIA MODAL
+// ════════════════════════════════════════════════════
+function openCriteriaModal() {
+  const list = document.getElementById('criteria-toggle-list');
+  const sub  = document.getElementById('criteria-modal-sub');
+  sub.textContent = showcaseType === 'kpop' ? 'Kpop Cover criteria' : 'Open Showcase criteria';
+  list.innerHTML  = scCriteria.map(c => `
+    <div class="crit-toggle-item ${scActive.has(c) ? 'active' : ''}" onclick="toggleCriterion('${c}',this)">
+      <span class="cti-name">${c}</span>
+      <span class="cti-check">${scActive.has(c) ? '✓' : '○'}</span>
+    </div>`).join('');
+}
+
+function toggleCriterion(c, el) {
+  if (scActive.has(c)) {
+    if (scActive.size <= 2) return;
+    scActive.delete(c);
+    el.classList.remove('active');
+    el.querySelector('.cti-check').textContent = '○';
+  } else {
+    scActive.add(c);
+    el.classList.add('active');
+    el.querySelector('.cti-check').textContent = '✓';
+  }
+}
+
+function addCustomCriterion() {
+  const inp = document.getElementById('new-crit-inp');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (scCriteria.includes(val)) { alert('Criterion already exists.'); return; }
+  scCriteria.push(val);
+  scCustomCriteria.push(val);
+  scActive.add(val);
+  inp.value = '';
+  openCriteriaModal();
+}
+
+function saveCriteriaAndClose() {
+  distributeWeightsEvenly(false);
+  initShowcaseScoring();
+  renderWeightSummary();
+  closeModal('modal-criteria');
+  triggerSave();
+}
+
+// ════════════════════════════════════════════════════
+//  WEIGHTAGE MODAL
+// ════════════════════════════════════════════════════
+function openWeightageModal() {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  const rows = document.getElementById('weightage-rows');
+  rows.innerHTML = activeCrits.map(c => `
+    <div class="weight-row">
+      <div class="weight-name">${c}</div>
+      <input class="weight-inp" type="number" id="w-${slugify(c)}" value="${scWeights[c] || 0}"
+        min="0" max="100" oninput="updateWeightTotal()">
+      <span class="weight-pct">%</span>
+    </div>`).join('');
+  updateWeightTotal();
+}
+
+function updateWeightTotal() {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  let total = 0;
+  activeCrits.forEach(c => { total += +(document.getElementById(`w-${slugify(c)}`)?.value || 0); });
+  const tv  = document.getElementById('weight-total-val');
+  const err = document.getElementById('weight-err');
+  const ok  = document.getElementById('weight-ok');
+  if (tv)  { tv.textContent = total + '%'; tv.style.color = Math.abs(total - 100) < 1 ? '#2d7a2d' : total > 100 ? 'var(--red)' : 'var(--wh)'; }
+  if (err)  err.style.display = (Math.abs(total - 100) >= 1 && total > 0) ? 'block' : 'none';
+  if (ok)   ok.style.display  = Math.abs(total - 100) < 1 ? 'block' : 'none';
+}
+
+function distributeWeightsEvenly(updateUI = true) {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  const n = activeCrits.length;
+  if (!n) return;
+  const base = Math.floor(100 / n);
+  const rem  = 100 - base * n;
+  activeCrits.forEach((c, i) => { scWeights[c] = base + (i < rem ? 1 : 0); });
+  if (updateUI) openWeightageModal();
+}
+
+function saveWeightageAndClose() {
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  let total = 0;
+  activeCrits.forEach(c => {
+    const v = +(document.getElementById(`w-${slugify(c)}`)?.value || 0);
+    scWeights[c] = v;
+    total += v;
+  });
+  if (Math.abs(total - 100) >= 1) { alert(`Weights total ${total}%, must be 100%.`); return; }
+  initShowcaseScoring();
+  renderWeightSummary();
+  closeModal('modal-weightage');
+  triggerSave();
+}
+
+// Live weight summary badges above scoring
+function renderWeightSummary() {
+  const el = document.getElementById('weight-summary');
+  if (!el) return;
+  const activeCrits = scCriteria.filter(c => scActive.has(c));
+  const total = activeCrits.reduce((s, c) => s + (scWeights[c] || 0), 0);
+  el.innerHTML = activeCrits.map(c => {
+    const w = scWeights[c] || 0;
+    return `<span style="font-family:'Space Mono',monospace;font-size:.58rem;letter-spacing:.06em;padding:3px 7px;background:#111;border:1px solid ${w > 0 ? '#3a3000' : '#1e1e1e'};color:${w > 0 ? 'var(--gold)' : '#333'}">${c} <strong>${w}%</strong></span>`;
+  }).join('') + (Math.abs(total - 100) < 1 ? '' :
+    `<span style="font-size:.58rem;color:var(--red);letter-spacing:.08em;align-self:center;margin-left:4px">⚠ ${total}% (must be 100%)</span>`);
+}
+
+// ════════════════════════════════════════════════════
+//  MODALS
+// ════════════════════════════════════════════════════
+function openModal(id) {
+  if (id === 'modal-criteria')  openCriteriaModal();
+  if (id === 'modal-weightage') openWeightageModal();
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ════════════════════════════════════════════════════
+//  SHARE / EXPORT
+// ════════════════════════════════════════════════════
+function shareResults() {
+  const el = document.getElementById('share-content');
+  if (!el) return;
+  let html = '';
+  if (!scLog.length) {
+    html = `<div style="font-size:.6rem;color:#333">No showcase entries yet.</div>`;
+  } else {
+    scLog.slice().sort((a, b) => b.final - a.final).forEach(e => {
+      html += `<div class="share-entry">
+        <span class="share-id">#${e.id}</span>
+        <span class="share-name">${e.groupName || '—'} <span style="font-size:.44rem;color:#555">(${e.type})</span></span>
+        <span class="share-score">${e.final} <span style="font-size:.6rem;color:#555">/ 100</span></span>
+        <span class="share-detail">${Object.entries(e.breakdown).map(([k, v]) => `${k}: ${v.score}/${v.weight}pts`).join(' · ')}</span>
+      </div>`;
+    });
+  }
+  el.innerHTML = html;
+  openModal('modal-share');
+}
+
+function copyResultsText() {
+  let text = `TriJudge Showcase Results — ${new Date().toLocaleString()}\n\n`;
+  scLog.slice().sort((a, b) => b.final - a.final).forEach(e => {
+    text += `#${e.id} ${e.groupName || '(unnamed)'} [${e.type}]: ${e.final}/100\n`;
+    Object.entries(e.breakdown).forEach(([k, v]) => { text += `  ${k}: ${v.score}/${v.weight}pts\n`; });
+    if (e.notes) text += `  Notes: ${e.notes}\n`;
+    text += '\n';
+  });
+  navigator.clipboard?.writeText(text).then(() => alert('Copied!')).catch(() => alert('Copy failed.'));
+}
+
+function exportCSV() {
+  const crits = scLog[0] ? Object.keys(scLog[0].breakdown) : [];
+  let csv = `ID,Group,Type,${crits.join(',')},Final\n`;
+  scLog.forEach(e => {
+    const vals = crits.map(c => e.breakdown[c]?.score ?? 0).join(',');
+    csv += `${e.id},"${e.groupName || ''}","${e.type}",${vals},${e.final}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url; a.download = `trijudge_showcase_${Date.now()}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function sendFeedback() {
+  const msg = document.getElementById('feedback-text')?.value?.trim();
+  if (!msg) { alert('Please enter a message.'); return; }
+  window.open(`mailto:aloysiusho22@gmail.com?subject=${encodeURIComponent('TriJudge Feedback')}&body=${encodeURIComponent(msg)}`);
+  document.getElementById('feedback-text').value = '';
+  closeModal('modal-feedback');
+}
+
+// ════════════════════════════════════════════════════
+//  AUTOSAVE
+// ════════════════════════════════════════════════════
+function triggerSave() {
+  clearTimeout(saveTimer);
+  const pill = document.getElementById('save-pill');
+  if (pill) { pill.textContent = '● SAVING'; pill.className = 'save-pill saving'; }
+  saveTimer = setTimeout(() => {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        showcaseType, scCriteria, scActive: [...scActive],
+        scCustomCriteria, scWeights, scLog, scIdCounter,
+        scSortOrder, scInputMode, scSequence, scCursor
+      }));
+      if (pill) {
+        pill.textContent = '✓ SAVED'; pill.className = 'save-pill saved';
+        setTimeout(() => { pill.textContent = '● AUTO'; pill.className = 'save-pill'; }, 1400);
+      }
+    } catch(e) {
+      if (pill) { pill.textContent = '● AUTO'; pill.className = 'save-pill'; }
+    }
+  }, 500);
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (s.showcaseType)      showcaseType      = s.showcaseType;
+    if (s.scCriteria)        scCriteria        = s.scCriteria;
+    if (s.scActive)          scActive          = new Set(s.scActive);
+    if (s.scCustomCriteria)  scCustomCriteria  = s.scCustomCriteria;
+    if (s.scWeights)         scWeights         = s.scWeights;
+    if (s.scLog)             { scLog = s.scLog; scIdCounter = s.scIdCounter || (scLog.length + 1); }
+    if (s.scSortOrder)       scSortOrder       = s.scSortOrder;
+    if (s.scInputMode)       scInputMode       = s.scInputMode;
+    if (s.scSequence)        { scSequence = s.scSequence; scCursor = s.scCursor || 0; }
+  } catch(e) {}
+}
+
+// ════════════════════════════════════════════════════
+//  PWA
+// ════════════════════════════════════════════════════
+let deferredPrompt = null;
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault(); deferredPrompt = e;
+  if (!localStorage.getItem('tj_install_dismissed') && !window.matchMedia('(display-mode:standalone)').matches) {
+    document.getElementById('install-bar').classList.add('show');
+  }
+});
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (!deferredPrompt) { alert('On iPhone: Share → Add to Home Screen\nOn Android: ⋮ → Add to Home Screen'); return; }
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById('install-bar').classList.remove('show');
+  if (outcome === 'accepted') localStorage.setItem('tj_install_dismissed', '1');
+});
+function dismissInstall() { document.getElementById('install-bar').classList.remove('show'); }
+
+// ════════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════════
+loadState();
+
+// Restore type button
+document.getElementById(showcaseType === 'kpop' ? 'stype-kpop' : 'stype-open').classList.add('active');
+document.getElementById(showcaseType === 'kpop' ? 'stype-open' : 'stype-kpop').classList.remove('active');
+
+// Restore input mode button
+document.querySelectorAll('.sc-input-mode-btn').forEach(btn => {
+  const mode = btn.id === 'sc-mode-slider' ? 'slider' : 'direct';
+  btn.classList.toggle('active', mode === scInputMode);
+});
+
+// Init scoring grid with restored weights
+if (Object.keys(scWeights).length === 0) distributeWeightsEvenly(false);
+initShowcaseScoring();
+renderWeightSummary();
+
+// Restore history
+if (scLog.length) renderScLog();
+
+// Restore sequence
+if (scSequence.length) renderSeqChips();
+</script>
+</body>
+</html>
